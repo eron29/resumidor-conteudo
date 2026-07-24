@@ -5,13 +5,26 @@ DEFAULT_MODEL = "gpt-4o-mini"
 MAX_CONTENT_CHARS = 150_000
 
 AUTO_PROMPT = """Você é um assistente especializado em sintetizar conteúdos longos em português.
-Gere um resumo estruturado em Markdown, com as seções abaixo (use exatamente esses títulos):
+Gere um resumo completo e detalhado em Markdown, com as seções abaixo (use exatamente esses títulos):
 
 ## Sumário Executivo
-## Principais Pontos
-## Conclusão
+Um parágrafo denso cobrindo do que se trata o conteúdo e por que ele importa.
 
-Seja claro, objetivo e fiel ao conteúdo original. Não invente informações.
+## Principais Pontos
+Organize em tópicos e subtópicos (bullet points), um por ideia central. Não resuma demais:
+detalhe cada ponto o suficiente para que quem não viu/leu o conteúdo original entenda o raciocínio
+completo, não apenas o título da ideia.
+
+## Exemplos e Casos Citados
+Liste, em tópicos, cada exemplo, caso prático, história, analogia, dado numérico ou demonstração
+mencionados no conteúdo, explicando o contexto de cada um. Se nenhum exemplo for citado, indique
+isso explicitamente nesta seção.
+
+## Conclusão
+Principais conclusões, recomendações ou próximos passos indicados no conteúdo.
+
+Seja completo e detalhado, mas fiel ao conteúdo original — não invente informações nem infira além
+do que está explícito.
 
 Conteúdo a resumir:
 ---
@@ -20,7 +33,10 @@ Conteúdo a resumir:
 """
 
 CUSTOM_PROMPT = """Você é um assistente especializado em sintetizar conteúdos longos em português.
-Resuma o conteúdo abaixo em Markdown, seguindo estritamente as instruções específicas do usuário.
+Resuma o conteúdo abaixo em Markdown, organizando as ideias em tópicos e subtópicos (bullet points)
+e destacando em uma seção própria os exemplos, casos práticos ou histórias citados no conteúdo,
+seguindo estritamente as instruções específicas do usuário abaixo. Onde as instruções do usuário
+conflitarem com essa estrutura padrão, priorize as instruções do usuário.
 Não invente informações que não estejam no conteúdo original.
 
 Instruções do usuário:
@@ -64,7 +80,7 @@ def summarize(content: str, mode: str = "auto", custom_instructions: str = "", m
 
     response = client.chat.completions.create(
         model=model,
-        max_tokens=4096,
+        max_tokens=8192,
         messages=[{"role": "user", "content": prompt}],
     )
     return response.choices[0].message.content
