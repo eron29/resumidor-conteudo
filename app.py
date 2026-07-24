@@ -4,20 +4,23 @@ import ai_client
 import db
 import exporter
 import extractors
+import theme
 
-st.set_page_config(page_title="Resumidor de Conteúdo IA", page_icon="📚", layout="wide")
+st.set_page_config(page_title="Resumidor de Conteúdo IA", layout="wide")
 
+theme.apply_theme()
 db.init_db()
 
 # --------------------------------------------------------------------------
 # Sidebar: gerenciamento de pastas / assuntos
 # --------------------------------------------------------------------------
-st.sidebar.title("📁 Pastas / Assuntos")
+theme.theme_toggle_button()
+st.sidebar.title("Pastas / Assuntos")
 
 folders = db.list_folders()
 folder_names = {f["id"]: f["name"] for f in folders}
 
-with st.sidebar.expander("➕ Nova pasta"):
+with st.sidebar.expander("Nova pasta"):
     new_folder_name = st.text_input("Nome da nova pasta", key="new_folder_name")
     if st.button("Criar pasta", key="create_folder_btn"):
         if new_folder_name.strip():
@@ -39,7 +42,7 @@ if folders:
         key="active_folder",
     )
 
-    with st.sidebar.expander("✏️ Renomear / 🗑️ Excluir pasta"):
+    with st.sidebar.expander("Renomear / Excluir pasta"):
         rename_value = st.text_input(
             "Novo nome", value=folder_names.get(selected_folder_id, ""), key="rename_folder_input"
         )
@@ -69,9 +72,9 @@ if not ai_client.get_secret("OPENAI_API_KEY"):
         help="Necessária apenas se st.secrets não estiver configurado (uso local).",
     )
 
-st.title("📚 Resumidor de Conteúdo com IA")
+st.title("Resumidor de Conteúdo com IA")
 
-tab_new, tab_library = st.tabs(["✨ Novo Resumo", "🗂️ Meus Resumos"])
+tab_new, tab_library = st.tabs(["Novo Resumo", "Meus Resumos"])
 
 # --------------------------------------------------------------------------
 # Aba: Novo Resumo
@@ -116,7 +119,7 @@ with tab_new:
             key="target_folder_new",
         )
 
-    generate = st.button("🚀 Gerar Resumo", type="primary", disabled=not source_ref)
+    generate = st.button("Gerar Resumo", type="primary", disabled=not source_ref)
 
     if generate:
         try:
@@ -166,7 +169,7 @@ with tab_new:
 
         col_save, col_export = st.columns(2)
         with col_save:
-            if st.button("💾 Salvar na pasta selecionada", disabled=not folders):
+            if st.button("Salvar na pasta selecionada", disabled=not folders):
                 db.save_summary(
                     result["folder_id"],
                     result["title"],
@@ -184,7 +187,7 @@ with tab_new:
                 result["content_md"],
             )
             st.download_button(
-                "⬇️ Exportar como HTML",
+                "Exportar como HTML",
                 data=html_export,
                 file_name=f"{(result['title'] or 'resumo')[:50]}.html",
                 mime="text/html",
@@ -208,14 +211,14 @@ with tab_library:
     else:
         selected_ids = []
         for s in summaries:
-            with st.expander(f"📄 {s['title']} — {s['folder_name'] or 'Sem pasta'} ({s['created_at']})"):
+            with st.expander(f"{s['title']} — {s['folder_name'] or 'Sem pasta'} ({s['created_at']})"):
                 st.markdown(s["content_md"])
                 cols = st.columns([1, 1, 2])
                 with cols[0]:
                     if st.checkbox("Selecionar", key=f"select_{s['id']}"):
                         selected_ids.append(s["id"])
                 with cols[1]:
-                    if st.button("🗑️ Excluir", key=f"delete_{s['id']}"):
+                    if st.button("Excluir", key=f"delete_{s['id']}"):
                         db.delete_summary(s["id"])
                         st.rerun()
                 with cols[2]:
@@ -225,7 +228,7 @@ with tab_library:
                         s["content_md"],
                     )
                     st.download_button(
-                        "⬇️ Exportar HTML",
+                        "Exportar HTML",
                         data=single_html,
                         file_name=f"{s['title'][:50]}.html",
                         mime="text/html",
@@ -236,7 +239,7 @@ with tab_library:
             selected_summaries = [s for s in summaries if s["id"] in selected_ids]
             batch_html = exporter.export_batch(selected_summaries)
             st.download_button(
-                f"⬇️ Exportar {len(selected_ids)} resumo(s) selecionado(s) (HTML)",
+                f"Exportar {len(selected_ids)} resumo(s) selecionado(s) (HTML)",
                 data=batch_html,
                 file_name="resumos_exportados.html",
                 mime="text/html",
