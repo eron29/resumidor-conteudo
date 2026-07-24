@@ -12,6 +12,14 @@ LIGHT_CSS = """
     background-color: #ffffff; color: #31333f;
 }
 [data-testid="stExpander"] { background-color: #ffffff; border: 1px solid #d3d3d3; }
+[data-testid="stAppViewContainer"] label, [data-testid="stAppViewContainer"] p,
+[data-testid="stAppViewContainer"] span, [data-testid="stAppViewContainer"] li,
+[data-testid="stSidebar"] label, [data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span, [data-testid="stSidebar"] li,
+[data-testid="stWidgetLabel"] p, [data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li {
+    color: #31333f !important;
+}
 </style>
 """
 
@@ -27,7 +35,15 @@ DARK_CSS = """
     background-color: #262730; color: #fafafa;
 }
 [data-testid="stExpander"] { background-color: #161a23; border: 1px solid #3b3f4a; }
-h1, h2, h3, h4, h5, h6, p, span, label, li { color: inherit; }
+h1, h2, h3, h4, h5, h6 { color: #fafafa; }
+[data-testid="stAppViewContainer"] label, [data-testid="stAppViewContainer"] p,
+[data-testid="stAppViewContainer"] span, [data-testid="stAppViewContainer"] li,
+[data-testid="stSidebar"] label, [data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span, [data-testid="stSidebar"] li,
+[data-testid="stWidgetLabel"] p, [data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li {
+    color: #fafafa !important;
+}
 </style>
 """
 
