@@ -25,11 +25,18 @@ def extract_youtube_id(url: str) -> str:
 
 def extract_from_youtube(url: str, languages=("pt", "pt-BR", "en")) -> str:
     video_id = extract_youtube_id(url)
+    api = YouTubeTranscriptApi()
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=list(languages))
-    except (TranscriptsDisabled, NoTranscriptFound) as exc:
+        transcript = api.fetch(video_id, languages=list(languages))
+    except NoTranscriptFound:
+        # Nenhuma legenda nos idiomas preferidos: usa a primeira disponível, seja qual for o idioma.
+        try:
+            transcript = next(iter(api.list(video_id))).fetch()
+        except (TranscriptsDisabled, NoTranscriptFound, StopIteration) as exc:
+            raise RuntimeError("Este vídeo não possui legendas/transcrição disponível.") from exc
+    except TranscriptsDisabled as exc:
         raise RuntimeError("Este vídeo não possui legendas/transcrição disponível.") from exc
-    return " ".join(chunk["text"] for chunk in transcript)
+    return " ".join(snippet.text for snippet in transcript)
 
 
 def extract_from_pdf(file) -> str:
