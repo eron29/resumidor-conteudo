@@ -1,13 +1,16 @@
 import re
 
 import pandas as pd
+import streamlit as st
 from docx import Document
 from pypdf import PdfReader
 from youtube_transcript_api import (
     NoTranscriptFound,
+    RequestBlocked,
     TranscriptsDisabled,
     YouTubeTranscriptApi,
 )
+from youtube_transcript_api.proxies import WebshareProxyConfig
 
 YOUTUBE_ID_PATTERNS = [
     r"(?:v=|\/embed\/|\/shorts\/)([0-9A-Za-z_-]{11})",
@@ -23,9 +26,29 @@ def extract_youtube_id(url: str) -> str:
     raise ValueError("URL do YouTube inválida ou não reconhecida.")
 
 
+def _get_secret(key: str):
+    try:
+        return st.secrets.get(key)
+    except Exception:
+        return None
+
+
+def _build_youtube_api() -> YouTubeTranscriptApi:
+    proxy_username = _get_secret("WEBSHARE_PROXY_USERNAME")
+    proxy_password = _get_secret("WEBSHARE_PROXY_PASSWORD")
+    if proxy_username and proxy_password:
+        return YouTubeTranscriptApi(
+            proxy_config=WebshareProxyConfig(
+                proxy_username=proxy_username,
+                proxy_password=proxy_password,
+            )
+        )
+    return YouTubeTranscriptApi()
+
+
 def extract_from_youtube(url: str, languages=("pt", "pt-BR", "en")) -> str:
     video_id = extract_youtube_id(url)
-    api = YouTubeTranscriptApi()
+    api = _build_youtube_api()
     try:
         transcript = api.fetch(video_id, languages=list(languages))
     except NoTranscriptFound:
@@ -36,6 +59,13 @@ def extract_from_youtube(url: str, languages=("pt", "pt-BR", "en")) -> str:
             raise RuntimeError("Este vídeo não possui legendas/transcrição disponível.") from exc
     except TranscriptsDisabled as exc:
         raise RuntimeError("Este vídeo não possui legendas/transcrição disponível.") from exc
+    except RequestBlocked as exc:
+        raise RuntimeError(
+            "O YouTube está bloqueando as requisições vindas do servidor deste app (comum em "
+            "hospedagens na nuvem, como o Streamlit Community Cloud). Para resolver, configure um "
+            "proxy gratuito: crie uma conta em webshare.io, copie as credenciais de 'Proxy' e "
+            "adicione WEBSHARE_PROXY_USERNAME e WEBSHARE_PROXY_PASSWORD nos Secrets do app."
+        ) from exc
     return " ".join(snippet.text for snippet in transcript)
 
 
